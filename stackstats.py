@@ -18,25 +18,35 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, time
+import sys, time, getopt
 import urllib, gzip, cStringIO, json
 
 T, C, d = time.time(), time.clock(), 0
 
-SITE = ''.join(list(i for i in sys.argv[1:] if
-    i.startswith("--site="))[:1])
-USER = ''.join(list(i for i in sys.argv[1:] if
-    i.startswith("--user="))[:1])
-
-if not SITE or not USER or not all(i.isdigit() for i in USER.strip("--user=")):
+def help():
     print "Usage: %s OPTIONS" % sys.argv[0]
     print "  --site=SITE (e.g. --site=stackoverflow.com)*"
     print "  --user=USER (e.g. --user=379799)*"
     print "The user-id appears in the URL of your profile page"
-    exit(1)
+    return
 
-SITE = SITE.split("=")[1]
-USER = USER.split("=")[1]
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "s:u:", ["site=", "user="])
+except getopt.GetoptError, derr:
+    print str(derr)
+    help()
+    sys.exit(1)
+
+for el, val in opts:
+    if el in ("-s", "--site"):
+        SITE = str(val)
+    elif el in ("-u", "--user"):
+        USER = int(val)
+    else:
+        # This shouldn't happen - but whatever.
+        print "Invalid option"
+        help()
+        sys.exit(1)
 
 for i in ("http://", "https://", "www.", ):
     if i in SITE: SITE = SITE.replace(i, "")
