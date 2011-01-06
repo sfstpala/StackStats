@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Version 0.4-0-2011-01-06
+# Version 0.4-8-2011-01-06
 
 #   Copyright (c) 2010 Stefano Palazzo <stefano.palazzo@gmail.com>
 #   Copyright (c) 2020 Marco Ceppi <marco.ceppi@seacrow.org>
@@ -24,6 +24,8 @@ import urllib, gzip, cStringIO, json
 
 T, C, d = time.time(), time.clock(), 0
 
+SITE, USER, DEBUG = "", "", False
+
 def help():
     print "Usage: %s OPTIONS" % sys.argv[0]
     print "  --site=SITE (e.g. --site=stackoverflow.com)*"
@@ -31,8 +33,15 @@ def help():
     print "The user-id appears in the URL of your profile page"
     return
 
+def user_id_problem():
+    print "Unknown or invalid user-id."
+    print "  Visit your profile page to see your user id,"
+    print "  e.g.: <http://askubuntu.com/users/\33[1m866\33[m/fluteflute>."
+    sys.exit(1)
+
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "s:u:", ["site=", "user="])
+    opts, args = getopt.getopt(sys.argv[1:], "s:u:d", ["site=", "user=",    
+        "debug", ])
 except getopt.GetoptError, derr:
     print str(derr)
     help()
@@ -42,12 +51,21 @@ for el, val in opts:
     if el in ("-s", "--site"):
         SITE = str(val)
     elif el in ("-u", "--user"):
-        USER = int(val)
+        try:
+            USER = int(val)
+        except ValueError:
+            user_id_problem()
+    elif el in ("-d", "--debug"):
+        DEBUG = True
     else:
         # This shouldn't happen - but whatever.
         print "Invalid option"
         help()
         sys.exit(1)
+
+if not SITE or not USER:
+    help()
+    sys.exit(1)
 
 for i in ("http://", "https://", "www.", ):
     if i in SITE: SITE = SITE.replace(i, "")
@@ -65,7 +83,14 @@ def get_api_data(query):
         return json.load(gzip.GzipFile(fileobj=
             cStringIO.StringIO(response)))
     except IOError:
-        print "Unknown or unsupported site"
+        print "Unknown or unsupported site. The follwing sites are supported:"
+        print "  stackoverflow.com"
+        print "  serverfault.com"
+        print "  superuser.com"
+        print "  meta.stackoverflow.com"
+        print "  stackapps.com"
+        print "  askubuntu.com"
+        print "  *.stackexchange.com"
         exit(1)
     except Exception, e:
         print e, type(e)
@@ -93,8 +118,7 @@ def get_user_x(USER, x, y):
 try:
     user_data = get_api_data("users/%s" % str(USER))["users"][0]
 except IndexError:
-    print "Unknown user-id. Visit your profile page to see your user id."
-    exit(1)
+    user_id_problem()
 
 if (list(ord(i) for i in SITE[:4]) == [97, 115, 107, 117] and
     int(USER) == 0x362):
@@ -200,7 +224,7 @@ print u"""
    - Views of answers: %d (min/avg/max: %d, %.2f, %d)
 """ % stats
 
-if "--debug" in sys.argv[1:]:
+if DEBUG:
     print "%d calls to the api" % N
     print "%.2fs Real, %.2fs User" % (time.time() - T, time.clock() - C, )
     print "Transferred %d KiB of data" % (d // 1024)
