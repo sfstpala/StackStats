@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# Version 0.3-7-2011-01-03
+# Version 0.4-0-2011-01-06
 
 #   Copyright (c) 2010 Stefano Palazzo <stefano.palazzo@gmail.com>
+#   Copyright (c) 2020 Marco Ceppi <marco.ceppi@seacrow.org>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
