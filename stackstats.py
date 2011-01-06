@@ -4,7 +4,7 @@
 # Version 0.4-8-2011-01-06
 
 #   Copyright (c) 2010 Stefano Palazzo <stefano.palazzo@gmail.com>
-#   Copyright (c) 2020 Marco Ceppi <marco.ceppi@seacrow.org>
+#   Copyright (c) 2011 Marco Ceppi <marco.ceppi@seacrow.org>
 
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
