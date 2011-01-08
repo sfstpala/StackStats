@@ -19,12 +19,19 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, time, getopt
-import urllib, gzip, cStringIO, json
+import sys
+import time
+import getopt
+
+import urllib
+import gzip
+import cStringIO
+import json
 
 T, C, d = time.time(), time.clock(), 0
 
 SITE, USER, DEBUG = "", "", False
+
 
 def help():
     print "Usage: %s OPTIONS" % sys.argv[0]
@@ -33,6 +40,7 @@ def help():
     print "The user-id appears in the URL of your profile page"
     return
 
+
 def user_id_problem():
     print "Unknown or invalid user-id."
     print "  Visit your profile page to see your user id,"
@@ -40,7 +48,7 @@ def user_id_problem():
     sys.exit(1)
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "s:u:d", ["site=", "user=",    
+    opts, args = getopt.getopt(sys.argv[1:], "s:u:d", ["site=", "user=",
         "debug", ])
 except getopt.GetoptError, derr:
     print str(derr)
@@ -68,20 +76,22 @@ if not SITE or not USER:
     sys.exit(1)
 
 for i in ("http://", "https://", "www.", ):
-    if i in SITE: SITE = SITE.replace(i, "")
+    if i in SITE:
+        SITE = SITE.replace(i, "")
 
 N = 0
+
+
 def get_api_data(query):
     global N, d
     N += 1
-    url = "http://api.%s/1.0/%s%s=%s" % (SITE, query, 
-        "&key" if "?" in query else "?key", 
+    url = "http://api.%s/1.0/%s%s=%s" % (SITE, query,
+        "&key" if "?" in query else "?key",
         "Ii-Ky_66uUqXrUme_J9ReA")
     try:
         response = urllib.urlopen(url).read()
         d += len(response)
-        return json.load(gzip.GzipFile(fileobj=
-            cStringIO.StringIO(response)))
+        return json.load(gzip.GzipFile(fileobj=cStringIO.StringIO(response)))
     except IOError:
         print "Unknown or unsupported site. The follwing sites are supported:"
         print "  stackoverflow.com"
@@ -96,6 +106,7 @@ def get_api_data(query):
         print e, type(e)
         exit(1)
 
+
 def get_user_x(USER, x, y):
     get_page = lambda n: get_api_data(
         "users/%s/%s?pagesize=100&page=%d" % (str(USER), x, n, ))
@@ -106,14 +117,18 @@ def get_user_x(USER, x, y):
         n += 1
         e.write(".")
         page = get_page(n)[y]
-        if not page: break
+        if not page:
+            break
         else:
             for i in page:
                 results.append(i)
     n += len(x)
-    e.write("\b" * n); e.write(" " * n); e.write("\b" * n)
+    e.write("\b" * n)
+    e.write(" " * n)
+    e.write("\b" * n)
     e.flush()
     return results
+
 
 try:
     user_data = get_api_data("users/%s" % str(USER))["users"][0]
@@ -129,7 +144,7 @@ if (list(ord(i) for i in SITE[:4]) == [97, 115, 107, 117] and
         114, 45, 101, 103, 103, 32, 58, 80]) + "\n")
 
 timeline = get_user_x(USER, 'timeline', 'user_timelines')
-questions =  get_user_x(USER, 'questions', 'questions')
+questions = get_user_x(USER, 'questions', 'questions')
 answers = get_user_x(USER, 'answers', 'answers')
 comments = get_user_x(USER, 'comments', 'comments')
 
@@ -146,10 +161,10 @@ downvotes_q = sum(i['down_vote_count'] for i in questions)
 downvotes_a = sum(i['down_vote_count'] for i in answers)
 
 great_comments = list(i['score'] for i in comments)
-badges = (u"\33[1;33m\u26ab\33[m %d \33[1;1m" + 
+badges = (u"\33[1;33m\u26ab\33[m %d \33[1;1m" +
     u"\u26ab\33[m %d \33[1;31m\u26ab\33[m %d ") % (
-    user_data['badge_counts']['gold'], 
-    user_data['badge_counts']['silver'], 
+    user_data['badge_counts']['gold'],
+    user_data['badge_counts']['silver'],
     user_data['badge_counts']['bronze'], )
 
 views_q = list(i['view_count'] for i in questions)
@@ -157,44 +172,46 @@ views_a = list(i['view_count'] for i in answers)
 
 if accepted:
     accept_rate = (float(accepted) / user_data['question_count']) * 100
-else: accept_rate = 0
+else:
+    accept_rate = 0
 
 if user_data['answer_count'] > 0:
     accepted_answer_count = (float(accepted_answers) /
         user_data['answer_count'] * 100)
-else: accepted_answer_count = 0
+else:
+    accepted_answer_count = 0
 
-stats = (username, 
+stats = (username,
     " (moderator)" if user_data['user_type'] == "moderator" else "",
-    user_data['user_id'], 
-    user_data['reputation'], badges, SITE, 
-    time.strftime("%c", time.localtime(user_data['creation_date'])), 
-    time.strftime("%c", time.localtime(user_data['last_access_date'])), 
-    user_data['view_count'], 
-    user_data['question_count'], accepted, accept_rate, 
-    user_data['answer_count'],  accepted_answers, 
-    accepted_answer_count,   
-    total_comments, sum(great_comments), 
-    sum(great_comments) / float(len(great_comments)) if great_comments else 0, 
+    user_data['user_id'],
+    user_data['reputation'], badges, SITE,
+    time.strftime("%c", time.localtime(user_data['creation_date'])),
+    time.strftime("%c", time.localtime(user_data['last_access_date'])),
+    user_data['view_count'],
+    user_data['question_count'], accepted, accept_rate,
+    user_data['answer_count'],  accepted_answers,
+    accepted_answer_count,
+    total_comments, sum(great_comments),
+    sum(great_comments) / float(len(great_comments)) if great_comments else 0,
     min(great_comments) if great_comments else 0,
-    max(great_comments) if great_comments else 0, 
-    user_data['up_vote_count'] + user_data['down_vote_count'], 
-    user_data['up_vote_count'], user_data['down_vote_count'], 
-    edits, copy_edits, 
+    max(great_comments) if great_comments else 0,
+    user_data['up_vote_count'] + user_data['down_vote_count'],
+    user_data['up_vote_count'], user_data['down_vote_count'],
+    edits, copy_edits,
     (upvotes_q + upvotes_a) - (downvotes_q + downvotes_a),
-    upvotes_q + upvotes_a, upvotes_q, upvotes_a, 
-    downvotes_q + downvotes_a, downvotes_q, downvotes_a, 
-    ((((upvotes_q + upvotes_a)  - (downvotes_q + downvotes_a)) /
+    upvotes_q + upvotes_a, upvotes_q, upvotes_a,
+    downvotes_q + downvotes_a, downvotes_q, downvotes_a,
+    ((((upvotes_q + upvotes_a) - (downvotes_q + downvotes_a)) /
         float(user_data['question_count'] + user_data['answer_count'])) if
             float(user_data['question_count'] + user_data['answer_count']) > 0
-            else -1), 
-    (((upvotes_q  - downvotes_q) / float(user_data['question_count']))
-        if float(user_data['question_count']) else 0), 
-    (((upvotes_a  - downvotes_a) / float(user_data['answer_count']))
-        if float(user_data['answer_count']) else 0), 
+            else -1),
+    (((upvotes_q - downvotes_q) / float(user_data['question_count']))
+        if float(user_data['question_count']) else 0),
+    (((upvotes_a - downvotes_a) / float(user_data['answer_count']))
+        if float(user_data['answer_count']) else 0),
     sum(views_q) if views_q else 0, min(views_q) if views_q else 0,
     sum(views_q) / float(len(views_q)) if views_q else 0,
-    max(views_q) if views_q else 0, 
+    max(views_q) if views_q else 0,
     sum(views_a) if views_a else 0, min(views_a) if views_a else 0,
     sum(views_a) / float(len(views_a)) if views_a else 0,
     max(views_a) if views_a else 0,
